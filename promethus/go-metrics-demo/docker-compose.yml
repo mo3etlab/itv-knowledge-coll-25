@@ -1,16 +1,15 @@
-version: '3.8'
-
 services:
   prometheus:
-    image: prom/prometheus:v2.47.2
+    image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/alert.rules.yml:/etc/prometheus/alert.rules.yml
+    ports:
+      - "9090:9090"
     command:
-      --config.file=/etc/prometheus/prometheus.yml
-      --web.enable-lifecycle  # 启用热重载端点
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
     networks:
       - metrics-net
 
@@ -21,8 +20,8 @@ services:
       - "8080:8080"
     networks:
       - metrics-net
-    environment:
-      - TZ=UTC
+    depends_on:
+      - service_b
 
   service_b:
     build: ./service_b
@@ -31,8 +30,6 @@ services:
       - "8081:8081"
     networks:
       - metrics-net
-    environment:
-      - TZ=UTC
 
 networks:
   metrics-net:
